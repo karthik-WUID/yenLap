@@ -1,0 +1,28 @@
+{
+  "name": "yenlap",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "test": "tsx --test packages/domain/test/*.test.ts apps/api/test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run build -w apps/web"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "tsx": "4.23.15",
+    "concurrently": "9.2.4",
+    "@types/express": "5.0.6",
+    "@types/cors": "2.8.19",
+    "@types/node": "22.20.4",
+    "@types/pg": "8.23.1"
+  }
+}

@@ -1,0 +1,12 @@
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+let storage: typeof import('../src/storage.ts').storage, root: string;
+const id = '00000000-0000-4000-8000-000000000001';
+before(async () => { root = await mkdtemp(join(tmpdir(), 'rebyte-encryption-')); process.env.STORAGE_DIR = root; storage = (await import('../src/storage.ts')).storage; });
+after(async () => { await rm(root, { recursive: true, force: true }); });
+test('recovery bytes are encrypted at rest and round-trip intact', async () => { const data = Buffer.from('Private memories: never plaintext on disk.'); await storage.put(id, data); const raw = await readFile(join(root, id + '.enc')); assert.equal(raw.includes(data), false); assert.deepEqual(await storage.get(id), data); });
+test('tampered encrypted artifacts fail authentication', async () => { const file = join(root, id + '.enc'), bytes = await readFile(file); bytes[bytes.length - 1] ^= 1; await writeFile(file, bytes); await assert.rejects(storage.get(id)); });
+test('storage rejects traversal and deletes private objects', async () => { await assert.rejects(storage.get('../private')); await storage.delete(id); await assert.rejects(storage.get(id)); });
